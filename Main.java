@@ -1,275 +1,257 @@
-import java.util.*;
-import java.io.*;
-import java.math.*;
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+
+import java.util.*;
+
+
 class Player {
 
+    static private void goUp() { System.out.println("C"); }
+    static private void goDown() { System.out.println("D"); }
+    static private void goRight() { System.out.println("A"); }
+    static private void goLeft() { System.out.println("E"); }
+
     public static void main(String args[]) {
-        
+
         Scanner in = new Scanner(System.in);
-        int firstInitInput = in.nextInt();
-        int secondInitInput = in.nextInt();
-        int thirdInitInput = in.nextInt();
-        Lab lab = new Lab(secondInitInput, firstInitInput, thirdInitInput);
-        
-        int count = 0;
+        int WIDTH = in.nextInt();
+        int HEIGHT = in.nextInt();
+        int NumberOfPlayers = in.nextInt();
+        final int ME = NumberOfPlayers - 1;
+        Lab lab = new Lab(HEIGHT, WIDTH, NumberOfPlayers);
+
         double lastX = 0;
         double lastY = 0;
 
         // game loop
         while (true) {
-           
-           
-            String firstInput = in.next();
-            String secondInput = in.next();
-            String thirdInput = in.next();
-            String fourthInput = in.next();
-            double[] x = new double[thirdInitInput];
-            double[] y = new double[thirdInitInput];
-            double [] distance = new double[thirdInitInput-1];
-            for (int i = 0; i < thirdInitInput; i++) {
+            String upString = in.next();
+            String rightString = in.next();
+            String downString = in.next();
+            String leftString = in.next();
+
+            double[] x = new double[NumberOfPlayers];
+            double[] y = new double[NumberOfPlayers];
+            double [] distance = new double[NumberOfPlayers-1];
+
+            // считываем координаты игроков
+            for (int i = 0; i < NumberOfPlayers; i++) {
                 int fifthInput = in.nextInt();
                 int sixthInput = in.nextInt();
                 lab.position(fifthInput, sixthInput, i);
                 x[i] = fifthInput;
                 y[i] = sixthInput;
             }
+
+            // считает расстояния до противников
             double min = 100000000;
-            int index = 0;
-             for (int i = 0; i < thirdInitInput-1; i++) {
-                distance[i] = getD(x[thirdInitInput-1], y [thirdInitInput-1], x[i], y[i]);
+            int nearestEnemy = 0;
+            for (int i = 0; i < NumberOfPlayers-1; i++) {
+                distance[i] = getD(x[ME], y[ME], x[i], y[i]);
                 if (distance[i] < min){
-                 min = distance[i];
-                 index = i;
+                    min = distance[i];
+                    nearestEnemy = i;
                 }
             }
-            
-            double nearX = x[index];
-            double nearY = y[index];
-            double myX = x[thirdInitInput-1];
-            double myY = y[thirdInitInput-1];
-            
-              boolean nearestX = false;
-              boolean nearestY = false;
+
+            double nearX = x[nearestEnemy];
+            double nearY = y[nearestEnemy];
+            double myX = x[ME];
+            double myY = y[ME];
+
+            boolean isNearestX = false;
+            boolean isNearestY = false;
+
             if (Math.abs(nearX - myX) < Math.abs(nearY - myY)){
-                nearestX = true;
+                isNearestX = true;
             } else if (Math.abs(nearX - myX) > Math.abs(nearY - myY)) {
-                   nearestY = true;
+                isNearestY = true;
             } else {
-                 nearestX = true;
-                 nearestY = true;
+                isNearestX = true;
+                isNearestY = true;
             }
-          
-             System.err.println(Arrays.toString(distance));
-            System.err.println(nearestX + " " + nearestY + " " + (index+1));
-             System.err.println(Arrays.toString(x));
-             System.err.println(Arrays.toString(y));
-             System.err.println("  " + firstInput);
-              System.err.println(fourthInput + " O " + secondInput );
-                System.err.println("  " + thirdInput);
-            // Write an action using System.out.println()
-            // To debug: System.err.println("Debug messages...");
-            boolean up = false;
-            boolean down = false;
-            boolean left = false;
-            boolean right = false;
-            if (firstInput.equals("_")) {
-                up = true; 
-                lab.allowUp();
-            } else {
-                lab.denyUp();
-            }
-            
-            if (secondInput.equals("_")){
-                right = true; 
-                lab.allowRight();
-            } else {
-                lab.denyRight();
-            }
-            
-            if (fourthInput.equals("_")){
-                left = true;
-                lab.allowLeft();
-            } else {
-                lab.denyLeft();
-            }
-            if (thirdInput.equals("_")){
-                down = true;
-                lab.allowDown();
-            } else {
-                lab.denyDown();
-            }
-             System.err.println(lab.getVisited());
+
+            System.err.println("Distance:" + Arrays.toString(distance));
+            System.err.println(isNearestX + " " + isNearestY + " " + (nearestEnemy+1));
+            System.err.println(Arrays.toString(x));
+            System.err.println(Arrays.toString(y));
+            System.err.println("  " + upString);
+            System.err.println(leftString + " O " + rightString );
+            System.err.println("  " + downString);
+
+            boolean isUpAllowed = upString.equals("_");
+            boolean isDownAllowed = downString.equals("_");
+            boolean isLeftAllowed = leftString.equals("_");
+            boolean isRigthAllowed = rightString.equals("_");
+
+            lab.setAllowance(Directions.UP, isUpAllowed);
+            lab.setAllowance(Directions.DOWN, isDownAllowed);
+            lab.setAllowance(Directions.LEFT, isLeftAllowed);
+            lab.setAllowance(Directions.RIGHT, isRigthAllowed);
+
+
+            System.err.println("Visited:" + lab.getVisitedCount());
             System.err.println(lab.toString());
-            
-            
-            // if ( Math.abs(myX - nearX) == 0 && Math.abs(myY - nearY) == 1){
-            //     System.out.println("B"); 
-            // } else if ( Math.abs(myX - nearX) == 1 && Math.abs(myY - nearY) == 0){
-            //     System.out.println("B"); 
-            // } else
-            
-           double p = 3;
-           double m = -3;
-            
-            if ((nearestX  || (nearestX && nearestX))&& myX - nearX >= 0){
-                if(right){
-                System.out.println("A"); 
-              
+
+
+            if (isNearestX && myX - nearX >= 0){
+                if(isRigthAllowed){
+                    goRight();
+                    
                 } else {
-                    if (left && myX - nearX == 0){
-                         System.out.println("E"); 
+                    if (isLeftAllowed && myX - nearX == 0){
+                        goLeft();
                     } else if (myY - nearY >= 0){
-                        if(down && myY + 1 != lastY){
-                         System.out.println("D");
-                        } else if(down && myY - nearY <= 10){
-                         System.out.println("D");
-                        } else if (up && myY - 1 != lastY){
-                             System.out.println("C");
-                        } else if (up && myY - nearY >= -6){
-                             System.out.println("C");
+                        if(isDownAllowed && myY + 1 != lastY){
+                            goDown();
+                        } else if(isDownAllowed && myY - nearY <= 10){
+                            goDown();
+                        } else if (isUpAllowed && myY - 1 != lastY){
+                            goUp();
+                        } else if (isUpAllowed && myY - nearY >= -6){
+                            goUp();
                         } else {
-                            System.out.println("E");
+                            goLeft();
                         }
-                        
+
                     } else {
-                       if (up && myY - 1 != lastY){
-                        System.out.println("C");
-                        }  else if (up && myY - nearY <= 10){
-                             System.out.println("C");
-                        } else if(down && myY + 1 != lastY){
-                         System.out.println("D");   
-                        } else if(down && myY - nearY >= -6){
-                         System.out.println("D");
+                        if (isUpAllowed && myY - 1 != lastY){
+                            goUp();
+                        }  else if (isUpAllowed && myY - nearY <= 10){
+                            goUp();
+                        } else if(isDownAllowed && myY + 1 != lastY){
+                            goDown();
+                        } else if(isDownAllowed && myY - nearY >= -6){
+                            goDown();
                         } else {
-                         System.out.println("E");   
+                            goLeft();
                         }
                     }
                 }
-            } else if ((nearestX  || (nearestX && nearestX)) && myX - nearX < 0){
-              if (left) {
-                System.out.println("E"); 
-                
-                } else { 
-                     if (myY - nearY >= 0){
-                       if(down && myY + 1 != lastY){
-                         System.out.println("D");
-                        } else if(down && myY - nearY <= 10){
-                         System.out.println("D");
-                        } else if (up && myY - 1 != lastY){
-                             System.out.println("C");
-                        }  else if (up && myY - nearY >= -6){
-                             System.out.println("C");
+            } else if (isNearestX && myX - nearX < 0){
+                if (isLeftAllowed) {
+                    goLeft();
+
+                } else {
+                    if (myY - nearY >= 0){
+                        if(isDownAllowed && myY + 1 != lastY){
+                            goDown();
+                        } else if(isDownAllowed && myY - nearY <= 10){
+                            goDown();
+                        } else if (isUpAllowed && myY - 1 != lastY){
+                            goUp();
+                        }  else if (isUpAllowed && myY - nearY >= -6){
+                            goUp();
                         } else {
-                            System.out.println("A");
-                        
+                            goRight();
+
                         }
                     } else {
-                        if (up && myY - 1 != lastY){
-                        System.out.println("C");
-                        }  else if (up && myY - nearY <=10){
-                             System.out.println("C");
-                        } else if(down && myY + 1 != lastY){
-                         System.out.println("D");   
-                        } else if(down && myY - nearY >= -6){
-                         System.out.println("D");
+                        if (isUpAllowed && myY - 1 != lastY){
+                            goUp();
+                        }  else if (isUpAllowed && myY - nearY <=10){
+                            goUp();
+                        } else if(isDownAllowed && myY + 1 != lastY){
+                            goDown();
+                        } else if(isDownAllowed && myY - nearY >= -6){
+                            goDown();
                         } else {
-                         System.out.println("A");   
+                            goRight();
                         }
                     }
                 }
-            } else if ((nearestY  || (nearestX && nearestX)) && myY - nearY >= 0){
-              if(down){
-                System.out.println("D"); 
-                
-              } else {
-                   if (up && myY - nearY == 0){
-                         System.out.println("C"); 
+            } else if (isNearestY && myY - nearY >= 0){
+                if(isDownAllowed){
+                    goDown();
+
+                } else {
+                    if (isUpAllowed && myY - nearY == 0){
+                        goUp();
                     } else if (myX - nearX >= 0){
-                        if(right && myX + 1 != lastX){
-                         System.out.println("A");
-                        } else  if(right && myX - nearX <= 10){
-                         System.out.println("A");
-                        } else if (left && myX - 1 != lastX){
-                             System.out.println("E");
-                        }  else if (left && myX - nearX >= -6){
-                             System.out.println("E");
+                        if(isRigthAllowed && myX + 1 != lastX){
+                            goRight();
+                        } else  if(isRigthAllowed && myX - nearX <= 10){
+                            goRight();
+                        } else if (isLeftAllowed && myX - 1 != lastX){
+                            goLeft();
+                        }  else if (isLeftAllowed && myX - nearX >= -6){
+                            goLeft();
                         }  else {
-                            System.out.println("C");
-                        
+                            goUp();
+
                         }
                     } else {
-                       if (left && myX - 1 != lastX){
-                        System.out.println("E");
-                        } else if (left && myX - nearX >= -6){
-                          System.out.println("E");
-                        } else  if(right && myX + 1 != lastX){
-                         System.out.println("A");   
-                        } else  if(right && myX - nearX <= 10){
-                         System.out.println("A");
+                        if (isLeftAllowed && myX - 1 != lastX){
+                            goLeft();
+                        } else if (isLeftAllowed && myX - nearX >= -6){
+                            goLeft();
+                        } else  if(isRigthAllowed && myX + 1 != lastX){
+                            goRight();
+                        } else  if(isRigthAllowed && myX - nearX <= 10){
+                            goRight();
                         } else {
-                         System.out.println("C");   
+                            goUp();
                         }
                     }
                 }
-            } else if ((nearestY  || (nearestX && nearestX)) && myY - nearY < 0){
-              if(up){
-                System.out.println("C"); 
-            
-              } else {
+            } else if (isNearestY && myY - nearY < 0){
+                if(isUpAllowed){
+                    goUp();
+
+                } else {
                     if (myX - nearX >= 0){
-                         if(right && myX + 1 != lastX){
-                         System.out.println("A");
-                        } else  if(right && myX - nearX <= 10){
-                         System.out.println("A");
-                        } else if (left && myX - 1 != lastX){
-                             System.out.println("E");
-                        } else if (left && myX - nearX >= -6){
-                          System.out.println("E");
+                        if(isRigthAllowed && myX + 1 != lastX){
+                            goRight();
+                        } else  if(isRigthAllowed && myX - nearX <= 10){
+                            goRight();
+                        } else if (isLeftAllowed && myX - 1 != lastX){
+                            goLeft();
+                        } else if (isLeftAllowed && myX - nearX >= -6){
+                            goLeft();
                         } else {
-                            System.out.println("D");
+                            goDown();
                         }
-                        
+
                     } else {
-                       if (left && myX - 1 != lastX){
-                        System.out.println("E");
-                        } else if (left && myX - nearX >= -6){
-                          System.out.println("E");
-                        } else  if(right && myX + 1 != lastX){
-                         System.out.println("A");   
-                        } else  if(right && myX - nearX <= 10){
-                         System.out.println("A");
+                        if (isLeftAllowed && myX - 1 != lastX){
+                            goLeft();
+                        } else if (isLeftAllowed && myX - nearX >= -6){
+                            goLeft();
+                        } else  if(isRigthAllowed && myX + 1 != lastX){
+                            goRight();
+                        } else  if(isRigthAllowed && myX - nearX <= 10){
+                            goRight();
                         } else {
-                         System.out.println("D");   
+                            goDown();
                         }
                     }
                 }
             }
-             lastX = myX;
-             lastY = myY;
-              System.err.println("final");
+            lastX = myX;
+            lastY = myY;
+        }
+
     }
-    
-    
-    
-}
-public static double getD(double x1, double y1, double x2, double y2){
+    public static double getD(double x1, double y1, double x2, double y2){
         return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
     }
 }
 
+
+
 class Lab {
+    enum CellState {UNKNOWN, ALLOWED, NOT_ALLOWED}
+
     class Cell{
         private boolean isVisited;
-        private int allowed;
+        private CellState cellState;
 
-        public Cell(boolean isVisited, int allowed) {
+        public Cell() {
+            this(false, CellState.UNKNOWN);
+        }
+
+        public Cell(boolean isVisited, CellState allowed) {
             this.isVisited = isVisited;
-            this.allowed = allowed;
+            this.cellState = allowed;
         }
 
         public boolean isVisited() {
@@ -280,29 +262,32 @@ class Lab {
             isVisited = visited;
         }
 
-        public int getAllowed() {
-            return allowed;
+        public CellState getCellState() {
+            return cellState;
         }
 
-        public void setAllowed(int allowed) {
-            this.allowed = allowed;
+        public void setCellState(CellState cellState) {
+            this.cellState = cellState;
         }
     }
-    private int dimY, dimX;
-    private int players, visited, turns;
-    private int[][] coords;
+
+    private final int height, width;  // размерность поля
+    private int players, visitedCount, turns;
+    private int[][] coords;  // координаты персонажей
     private Cell[][] matrix;
 
     public Lab(int y, int x, int players) {
-        if (y <=0 || x <= 0) {
+        if (y < 0 || x < 0) {
             throw new IllegalArgumentException();
         }
-        dimY = y;
-        dimX = x;
+
+        this.height = y;
+        this.width = x;
         matrix = new Cell[y][x];
+
         for (int i = 0; i < y; i++) {
             for (int j = 0; j < x; j++) {
-                matrix[i][j] = new Cell(false, 0);
+                matrix[i][j] = new Cell();
             }
         }
 
@@ -311,15 +296,42 @@ class Lab {
     }
 
     public void position(int y, int x, int player) {
-        matrix[y][x].setAllowed(1);
+        matrix[y][x].setCellState(CellState.ALLOWED);
         if (player == players - 1) {
             turns++;
             if (!matrix[y][x].isVisited()) {
                 matrix[y][x].setVisited(true);
-                visited++;
+                visitedCount++;
             }
         }
         coords[player] = new int[]{y, x};
+    }
+
+    public void setAllowance(Directions direction, boolean isAllowed) {
+        // TODO разобраться с координатной   системой
+        int xOffset = 0;
+        int yOffset = 0;
+        switch (direction) {
+            case UP:
+                xOffset = -1;  // TODO почему не y - 1?
+                break;
+            case DOWN:
+                xOffset = +1;
+                break;
+            case LEFT:
+                yOffset = -1;
+                break;
+            case RIGHT:
+                yOffset = +1;
+                break;
+        }
+
+        if (isAllowed) {
+            allow(coords[players-1][0] + yOffset, coords[players-1][1] + xOffset);
+        }
+        else {
+            deny(coords[players-1][0] + yOffset, coords[players-1][1] + xOffset);
+        }
     }
 
     public void allowLeft() {
@@ -349,16 +361,16 @@ class Lab {
     }
 
     private void deny(int y, int x) {
-        matrix[y][x].setAllowed(-1);
+        matrix[y][x].setCellState(CellState.NOT_ALLOWED);
     }
 
     private void allow(int y, int x) {
-        if (y < dimY && x < dimX && y >= 0 && x >= 0)
-        matrix[y][x].setAllowed(1);
+        if (y < height && x < width && y >= 0 && x >= 0)
+            matrix[y][x].setCellState(CellState.ALLOWED);
     }
-    
-    public int getVisited() {
-        return visited;
+
+    public int getVisitedCount() {
+        return visitedCount;
     }
 
     public int getTurns() {
@@ -369,12 +381,12 @@ class Lab {
     public String toString() {
         StringBuilder b = new StringBuilder();
 
-        for (int i = 0; i < dimX; i++) {
+        for (int i = 0; i < width; i++) {
             joter:
-            for (int j = 0; j < dimY; j++) {
-                if (matrix[j][i].getAllowed() == -1) {
+            for (int j = 0; j < height; j++) {
+                if (matrix[j][i].getCellState() == CellState.NOT_ALLOWED) {
                     b.append(" X");
-                } else if (matrix[j][i].getAllowed() == 0) {
+                } else if (matrix[j][i].getCellState() == CellState.UNKNOWN) {
                     b.append(" ?");
                 } else if (matrix[j][i].isVisited()) {
                     b.append("  ");
@@ -387,7 +399,7 @@ class Lab {
 
         for (int i = 0; i < players; i++) {
             int start, end;
-            start = (dimY + 1)*2*coords[i][1] + coords[i][0]*2;
+            start = (height + 1)*2*coords[i][1] + coords[i][0]*2;
             end = start + 2;
             switch (players - i - 1) {
                 case 0 :
@@ -401,3 +413,5 @@ class Lab {
         return b.toString();
     }
 }
+
+enum Directions {UP, DOWN, LEFT, RIGHT}
