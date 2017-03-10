@@ -10,7 +10,6 @@ class Player {
         int WIDTH = in.nextInt();
         int HEIGHT = in.nextInt();
         int NumberOfPlayers = in.nextInt();
-        final int ME = NumberOfPlayers - 1;
         Lab lab = new Lab(HEIGHT, WIDTH, NumberOfPlayers);
 
         Strategy runAwayStrategy = new KhatStrategy();
@@ -23,6 +22,13 @@ class Player {
             String downString = in.next();
             String leftString = in.next();
 
+            // get coords of players
+            for (int player = 0; player < NumberOfPlayers; player++) {
+                int y = in.nextInt();
+                int x = in.nextInt();
+                lab.position(y, x, player);
+            }
+
             boolean isUpAllowed = upString.equals("_");
             boolean isDownAllowed = downString.equals("_");
             boolean isLeftAllowed = leftString.equals("_");
@@ -33,32 +39,23 @@ class Player {
             lab.setAllowance(Directions.LEFT, isLeftAllowed);
             lab.setAllowance(Directions.RIGHT, isRigthAllowed);
 
-            // get coords of players
-            for (int player = 0; player < NumberOfPlayers; player++) {
-                int x = in.nextInt();
-                int y = in.nextInt();
-                lab.position(x, y, player);
-            }
 
             System.err.println("Visited:" + lab.getVisitedCount());
             System.err.println(lab.toString());
 
+            runAwayStrategy.getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed);
+            double runWeight = runAwayStrategy.adviceStrength;
+
             Strategy strategy;
-            if (isStucked()) {
+            if (isStucked() && runWeight > 6) {
                 strategy = randomStrategy;
             } else {
                 strategy = runAwayStrategy;
             }
 
-//            makeMove(strategy
-//                    .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
-
-//            makeMove(randomStrategy
-//                    .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
-
-            makeMove(runAwayStrategy
+            makeMove(strategy
                     .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
-
+            
         }
 
     }
@@ -84,7 +81,18 @@ class Player {
     }
 }
 
+class Advice {
+    final double adviceStrength;
+    final Directions directions;
+
+    public Advice(double adviceStrength, Directions directions) {
+        this.adviceStrength = adviceStrength;
+        this.directions = directions;
+    }
+}
+
 abstract class Strategy {
+    double adviceStrength;
     abstract Directions getAdvice(Lab lab, boolean isUpAllowed, boolean isDownAllowed, boolean isLeftAllowed, boolean isRigthAllowed);
 }
 
@@ -93,6 +101,7 @@ class RandomStrategy extends Strategy {
 
     public RandomStrategy() {
         this.random = new Random();
+        adviceStrength = 1;
     }
 
 
@@ -109,7 +118,7 @@ class RandomStrategy extends Strategy {
 }
 
 
-// corrupted
+
 class KhatStrategy extends Strategy {
     private double lastX = 0;
     private double lastY = 0;
@@ -129,17 +138,19 @@ class KhatStrategy extends Strategy {
         }
 
         double min = 100000000;
-        int index = 0;
+        int closiestEnemy = 0;
         for (int enemy = 0; enemy < ME; enemy++) {
             distance[enemy] = Player.getD(x[ME], y [ME], x[enemy], y[enemy]);
             if (distance[enemy] < min){
                 min = distance[enemy];
-                index = enemy;
+                closiestEnemy = enemy;
             }
         }
 
-        double nearX = x[index];
-        double nearY = y[index];
+        adviceStrength = distance[closiestEnemy];
+
+        double nearX = x[closiestEnemy];
+        double nearY = y[closiestEnemy];
         double myX = x[ME];
         double myY = y[ME];
 
@@ -370,12 +381,11 @@ class Lab {
     }
 
     public void setAllowance(Directions direction, boolean isAllowed) {
-        // TODO разобраться с координатной   системой
         int xOffset = 0;
         int yOffset = 0;
         switch (direction) {
             case UP:
-                xOffset = -1;  // TODO почему не y - 1?
+                xOffset = -1;
                 break;
             case DOWN:
                 xOffset = +1;
