@@ -1,14 +1,8 @@
-package codinggame.pacman;
-
 import java.util.*;
 
 
 class Player {
-
-    static private void goUp() { System.out.println("C"); }
-    static private void goDown() { System.out.println("D"); }
-    static private void goRight() { System.out.println("A"); }
-    static private void goLeft() { System.out.println("E"); }
+    static List<Directions> moves = new ArrayList<>();
 
     public static void main(String args[]) {
 
@@ -19,8 +13,8 @@ class Player {
         final int ME = NumberOfPlayers - 1;
         Lab lab = new Lab(HEIGHT, WIDTH, NumberOfPlayers);
 
-        double lastX = 0;
-        double lastY = 0;
+        Strategy runAwayStrategy = new KhatStrategy();
+        Strategy randomStrategy = new RandomStrategy();
 
         // game loop
         while (true) {
@@ -28,55 +22,6 @@ class Player {
             String rightString = in.next();
             String downString = in.next();
             String leftString = in.next();
-
-            double[] x = new double[NumberOfPlayers];
-            double[] y = new double[NumberOfPlayers];
-            double [] distance = new double[NumberOfPlayers-1];
-
-            // считываем координаты игроков
-            for (int i = 0; i < NumberOfPlayers; i++) {
-                int fifthInput = in.nextInt();
-                int sixthInput = in.nextInt();
-                lab.position(fifthInput, sixthInput, i);
-                x[i] = fifthInput;
-                y[i] = sixthInput;
-            }
-
-            // считает расстояния до противников
-            double min = 100000000;
-            int nearestEnemy = 0;
-            for (int i = 0; i < NumberOfPlayers-1; i++) {
-                distance[i] = getD(x[ME], y[ME], x[i], y[i]);
-                if (distance[i] < min){
-                    min = distance[i];
-                    nearestEnemy = i;
-                }
-            }
-
-            double nearX = x[nearestEnemy];
-            double nearY = y[nearestEnemy];
-            double myX = x[ME];
-            double myY = y[ME];
-
-            boolean isNearestX = false;
-            boolean isNearestY = false;
-
-            if (Math.abs(nearX - myX) < Math.abs(nearY - myY)){
-                isNearestX = true;
-            } else if (Math.abs(nearX - myX) > Math.abs(nearY - myY)) {
-                isNearestY = true;
-            } else {
-                isNearestX = true;
-                isNearestY = true;
-            }
-
-            System.err.println("Distance:" + Arrays.toString(distance));
-            System.err.println(isNearestX + " " + isNearestY + " " + (nearestEnemy+1));
-            System.err.println(Arrays.toString(x));
-            System.err.println(Arrays.toString(y));
-            System.err.println("  " + upString);
-            System.err.println(leftString + " O " + rightString );
-            System.err.println("  " + downString);
 
             boolean isUpAllowed = upString.equals("_");
             boolean isDownAllowed = downString.equals("_");
@@ -88,158 +33,273 @@ class Player {
             lab.setAllowance(Directions.LEFT, isLeftAllowed);
             lab.setAllowance(Directions.RIGHT, isRigthAllowed);
 
+            // get coords of players
+            for (int player = 0; player < NumberOfPlayers; player++) {
+                int x = in.nextInt();
+                int y = in.nextInt();
+                lab.position(x, y, player);
+            }
 
             System.err.println("Visited:" + lab.getVisitedCount());
             System.err.println(lab.toString());
 
-
-            if (isNearestX && myX - nearX >= 0){
-                if(isRigthAllowed){
-                    goRight();
-                    
-                } else {
-                    if (isLeftAllowed && myX - nearX == 0){
-                        goLeft();
-                    } else if (myY - nearY >= 0){
-                        if(isDownAllowed && myY + 1 != lastY){
-                            goDown();
-                        } else if(isDownAllowed && myY - nearY <= 10){
-                            goDown();
-                        } else if (isUpAllowed && myY - 1 != lastY){
-                            goUp();
-                        } else if (isUpAllowed && myY - nearY >= -6){
-                            goUp();
-                        } else {
-                            goLeft();
-                        }
-
-                    } else {
-                        if (isUpAllowed && myY - 1 != lastY){
-                            goUp();
-                        }  else if (isUpAllowed && myY - nearY <= 10){
-                            goUp();
-                        } else if(isDownAllowed && myY + 1 != lastY){
-                            goDown();
-                        } else if(isDownAllowed && myY - nearY >= -6){
-                            goDown();
-                        } else {
-                            goLeft();
-                        }
-                    }
-                }
-            } else if (isNearestX && myX - nearX < 0){
-                if (isLeftAllowed) {
-                    goLeft();
-
-                } else {
-                    if (myY - nearY >= 0){
-                        if(isDownAllowed && myY + 1 != lastY){
-                            goDown();
-                        } else if(isDownAllowed && myY - nearY <= 10){
-                            goDown();
-                        } else if (isUpAllowed && myY - 1 != lastY){
-                            goUp();
-                        }  else if (isUpAllowed && myY - nearY >= -6){
-                            goUp();
-                        } else {
-                            goRight();
-
-                        }
-                    } else {
-                        if (isUpAllowed && myY - 1 != lastY){
-                            goUp();
-                        }  else if (isUpAllowed && myY - nearY <=10){
-                            goUp();
-                        } else if(isDownAllowed && myY + 1 != lastY){
-                            goDown();
-                        } else if(isDownAllowed && myY - nearY >= -6){
-                            goDown();
-                        } else {
-                            goRight();
-                        }
-                    }
-                }
-            } else if (isNearestY && myY - nearY >= 0){
-                if(isDownAllowed){
-                    goDown();
-
-                } else {
-                    if (isUpAllowed && myY - nearY == 0){
-                        goUp();
-                    } else if (myX - nearX >= 0){
-                        if(isRigthAllowed && myX + 1 != lastX){
-                            goRight();
-                        } else  if(isRigthAllowed && myX - nearX <= 10){
-                            goRight();
-                        } else if (isLeftAllowed && myX - 1 != lastX){
-                            goLeft();
-                        }  else if (isLeftAllowed && myX - nearX >= -6){
-                            goLeft();
-                        }  else {
-                            goUp();
-
-                        }
-                    } else {
-                        if (isLeftAllowed && myX - 1 != lastX){
-                            goLeft();
-                        } else if (isLeftAllowed && myX - nearX >= -6){
-                            goLeft();
-                        } else  if(isRigthAllowed && myX + 1 != lastX){
-                            goRight();
-                        } else  if(isRigthAllowed && myX - nearX <= 10){
-                            goRight();
-                        } else {
-                            goUp();
-                        }
-                    }
-                }
-            } else if (isNearestY && myY - nearY < 0){
-                if(isUpAllowed){
-                    goUp();
-
-                } else {
-                    if (myX - nearX >= 0){
-                        if(isRigthAllowed && myX + 1 != lastX){
-                            goRight();
-                        } else  if(isRigthAllowed && myX - nearX <= 10){
-                            goRight();
-                        } else if (isLeftAllowed && myX - 1 != lastX){
-                            goLeft();
-                        } else if (isLeftAllowed && myX - nearX >= -6){
-                            goLeft();
-                        } else {
-                            goDown();
-                        }
-
-                    } else {
-                        if (isLeftAllowed && myX - 1 != lastX){
-                            goLeft();
-                        } else if (isLeftAllowed && myX - nearX >= -6){
-                            goLeft();
-                        } else  if(isRigthAllowed && myX + 1 != lastX){
-                            goRight();
-                        } else  if(isRigthAllowed && myX - nearX <= 10){
-                            goRight();
-                        } else {
-                            goDown();
-                        }
-                    }
-                }
+            Strategy strategy;
+            if (isStucked()) {
+                strategy = randomStrategy;
+            } else {
+                strategy = runAwayStrategy;
             }
-            lastX = myX;
-            lastY = myY;
+
+//            makeMove(strategy
+//                    .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
+
+//            makeMove(randomStrategy
+//                    .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
+
+            makeMove(runAwayStrategy
+                    .getAdvice(lab, isUpAllowed, isDownAllowed, isLeftAllowed, isRigthAllowed));
+
         }
 
     }
+
+    public static void makeMove(Directions direction) {
+        moves.add(direction);
+        System.out.println(direction.letter);
+    }
+
+    // find LEFT - RIGHT - LEFT - RIGHT moves
+    public static boolean isStucked() {
+        for (int i = moves.size()-1; i > 2; i--) {
+            if(moves.get(i) == moves.get(i-2) && moves.get(i-1) == moves.get(i-3)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static double getD(double x1, double y1, double x2, double y2){
         return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
     }
 }
 
+abstract class Strategy {
+    abstract Directions getAdvice(Lab lab, boolean isUpAllowed, boolean isDownAllowed, boolean isLeftAllowed, boolean isRigthAllowed);
+}
+
+class RandomStrategy extends Strategy {
+    private Random random;
+
+    public RandomStrategy() {
+        this.random = new Random();
+    }
+
+
+    @Override
+    Directions getAdvice(Lab lab, boolean isUpAllowed, boolean isDownAllowed, boolean isLeftAllowed, boolean isRigthAllowed) {
+        List<Directions> possibleWays = new ArrayList<>();
+        if(isUpAllowed) possibleWays.add(Directions.UP);
+        if(isDownAllowed) possibleWays.add(Directions.DOWN);
+        if(isLeftAllowed) possibleWays.add(Directions.LEFT);
+        if(isRigthAllowed) possibleWays.add(Directions.RIGHT);
+
+        return possibleWays.get(random.nextInt(possibleWays.size()));
+    }
+}
+
+
+// corrupted
+class KhatStrategy extends Strategy {
+    private double lastX = 0;
+    private double lastY = 0;
+
+
+    @Override
+    Directions getAdvice(Lab lab, boolean isUpAllowed, boolean isDownAllowed, boolean isLeftAllowed, boolean isRigthAllowed) {
+        final int ME = lab.ME;
+
+        double[] x = new double[lab.numberOfPlayers];
+        double[] y = new double[lab.numberOfPlayers];
+        double [] distance = new double[lab.numberOfPlayers - 1];
+
+        for (int player = 0; player < lab.numberOfPlayers; player++) {
+            x[player] = lab.coords[player][0];
+            y[player] = lab.coords[player][1];
+        }
+
+        double min = 100000000;
+        int index = 0;
+        for (int enemy = 0; enemy < ME; enemy++) {
+            distance[enemy] = Player.getD(x[ME], y [ME], x[enemy], y[enemy]);
+            if (distance[enemy] < min){
+                min = distance[enemy];
+                index = enemy;
+            }
+        }
+
+        double nearX = x[index];
+        double nearY = y[index];
+        double myX = x[ME];
+        double myY = y[ME];
+
+        boolean nearestX = false;
+        boolean nearestY = false;
+
+        if (Math.abs(nearX - myX) < Math.abs(nearY - myY)){
+            nearestX = true;
+        } else if (Math.abs(nearX - myX) > Math.abs(nearY - myY)) {
+            nearestY = true;
+        } else {
+            nearestX = true;
+            nearestY = true;
+        }
+
+        if (nearestX && myX - nearX >= 0){
+            if(isRigthAllowed){
+                return Directions.RIGHT;
+            } else {
+                if (isLeftAllowed && myX - nearX == 0){
+                    return Directions.LEFT;
+                } else if (myY - nearY >= 0){
+                    if(isDownAllowed && myY + 1 != lastY){
+                        return Directions.DOWN;
+                    } else if(isDownAllowed && myY - nearY <= 10){
+                        return Directions.DOWN;
+                    } else if (isUpAllowed && myY - 1 != lastY){
+                        return Directions.UP;
+                    } else if (isUpAllowed && myY - nearY >= -6){
+                        return Directions.UP;
+                    } else {
+                        return Directions.LEFT;
+                    }
+                } else {
+                    if (isUpAllowed && myY - 1 != lastY){
+                        return Directions.UP;
+                    }  else if (isUpAllowed && myY - nearY <= 10){
+                        return Directions.UP;
+                    } else if(isDownAllowed && myY + 1 != lastY){
+                        return Directions.DOWN;
+                    } else if(isDownAllowed && myY - nearY >= -6){
+                        return Directions.DOWN;
+                    } else {
+                        return Directions.LEFT;
+                    }
+                }
+            }
+        } else if (nearestX && myX - nearX < 0){
+            if (isLeftAllowed) {
+                return Directions.LEFT;
+            } else {
+                if (myY - nearY >= 0){
+                    if(isDownAllowed && myY + 1 != lastY){
+                        return Directions.DOWN;
+                    } else if(isDownAllowed && myY - nearY <= 10){
+                        return Directions.DOWN;
+                    } else if (isUpAllowed && myY - 1 != lastY){
+                        return Directions.UP;
+                    }  else if (isUpAllowed && myY - nearY >= -6){
+                        return Directions.UP;
+                    } else {
+                        return Directions.RIGHT;
+                    }
+                } else {
+                    if (isUpAllowed && myY - 1 != lastY){
+                        return Directions.UP;
+                    }  else if (isUpAllowed && myY - nearY <=10){
+                        return Directions.UP;
+                    } else if(isDownAllowed && myY + 1 != lastY){
+                        return Directions.DOWN;
+                    } else if(isDownAllowed && myY - nearY >= -6){
+                        return Directions.DOWN;
+                    } else {
+                        return Directions.RIGHT;
+                    }
+                }
+            }
+        } else if (myY - nearY >= 0){
+            if(isDownAllowed){
+                return Directions.DOWN;
+            } else {
+                if (isUpAllowed && myY - nearY == 0){
+                    return Directions.UP;
+                } else if (myX - nearX >= 0){
+                    if(isRigthAllowed && myX + 1 != lastX){
+                        return Directions.RIGHT;
+                    } else  if(isRigthAllowed && myX - nearX <= 10){
+                        return Directions.RIGHT;
+                    } else if (isLeftAllowed && myX - 1 != lastX){
+                        return Directions.LEFT;
+                    }  else if (isLeftAllowed && myX - nearX >= -6){
+                        return Directions.LEFT;
+                    }  else {
+                        return Directions.UP;
+                    }
+                } else {
+                    if (isLeftAllowed && myX - 1 != lastX){
+                        return Directions.LEFT;
+                    } else if (isLeftAllowed && myX - nearX >= -6){
+                        return Directions.LEFT;
+                    } else  if(isRigthAllowed && myX + 1 != lastX){
+                        return Directions.RIGHT;
+                    } else  if(isRigthAllowed && myX - nearX <= 10){
+                        return Directions.RIGHT;
+                    } else {
+                        return Directions.UP;
+                    }
+                }
+            }
+        } else if (myY - nearY < 0){
+            if(isUpAllowed){
+                return Directions.UP;
+            } else {
+                if (myX - nearX >= 0){
+                    if(isRigthAllowed && myX + 1 != lastX){
+                        return Directions.RIGHT;
+                    } else  if(isRigthAllowed && myX - nearX <= 10){
+                        return Directions.RIGHT;
+                    } else if (isLeftAllowed && myX - 1 != lastX){
+                        return Directions.LEFT;
+                    } else if (isLeftAllowed && myX - nearX >= -6){
+                        return Directions.LEFT;
+                    } else {
+                        return Directions.DOWN;
+                    }
+                } else {
+                    if (isLeftAllowed && myX - 1 != lastX){
+                        return Directions.LEFT;
+                    } else if (isLeftAllowed && myX - nearX >= -6){
+                        return Directions.LEFT;
+                    } else  if(isRigthAllowed && myX + 1 != lastX){
+                        return Directions.RIGHT;
+                    } else  if(isRigthAllowed && myX - nearX <= 10){
+                        return Directions.RIGHT;
+                    } else {
+                        return Directions.DOWN;
+                    }
+                }
+            }
+        }
+        lastX = myX;
+        lastY = myY;
+
+        return null;
+    }
+}
+
+enum Directions {
+    UP('C'), DOWN('D'), LEFT('E'), RIGHT('A');
+    public final char letter;
+
+    Directions(char letter) {
+        this.letter = letter;
+    }
+}
+
+enum CellState {UNKNOWN, ALLOWED, NOT_ALLOWED}
 
 
 class Lab {
-    enum CellState {UNKNOWN, ALLOWED, NOT_ALLOWED}
 
     class Cell{
         private boolean isVisited;
@@ -272,11 +332,12 @@ class Lab {
     }
 
     private final int height, width;  // размерность поля
-    private int players, visitedCount, turns;
-    private int[][] coords;  // координаты персонажей
+    private int visitedCount, turns;
+    int[][] coords;  // координаты персонажей
+    final int numberOfPlayers, ME;
     private Cell[][] matrix;
 
-    public Lab(int y, int x, int players) {
+    public Lab(int y, int x, int numberOfPlayers) {
         if (y < 0 || x < 0) {
             throw new IllegalArgumentException();
         }
@@ -291,13 +352,14 @@ class Lab {
             }
         }
 
-        this.players = players;
-        coords = new int[players][2];
+        this.numberOfPlayers = numberOfPlayers;
+        ME = numberOfPlayers - 1;
+        coords = new int[numberOfPlayers][2];
     }
 
     public void position(int y, int x, int player) {
         matrix[y][x].setCellState(CellState.ALLOWED);
-        if (player == players - 1) {
+        if (player == ME) {
             turns++;
             if (!matrix[y][x].isVisited()) {
                 matrix[y][x].setVisited(true);
@@ -327,41 +389,16 @@ class Lab {
         }
 
         if (isAllowed) {
-            allow(coords[players-1][0] + yOffset, coords[players-1][1] + xOffset);
+            allow(coords[ME][0] + yOffset, coords[ME][1] + xOffset);
         }
         else {
-            deny(coords[players-1][0] + yOffset, coords[players-1][1] + xOffset);
+            deny(coords[ME][0] + yOffset, coords[ME][1] + xOffset);
         }
-    }
-
-    public void allowLeft() {
-        allow(coords[players-1][0] - 1, coords[players-1][1]);
-    }
-    public void allowRight() {
-        allow(coords[players-1][0] + 1, coords[players-1][1]);
-    }
-    public void allowUp() {
-        allow(coords[players-1][0], coords[players-1][1] - 1);
-    }
-    public void allowDown() {
-        allow(coords[players-1][0], coords[players-1][1] + 1);
-    }
-
-    public void denyLeft() {
-        deny(coords[players-1][0] - 1, coords[players-1][1]);
-    }
-    public void denyRight() {
-        deny(coords[players-1][0] + 1, coords[players-1][1]);
-    }
-    public void denyUp() {
-        deny(coords[players-1][0], coords[players-1][1] - 1);
-    }
-    public void denyDown() {
-        deny(coords[players-1][0], coords[players-1][1] + 1);
     }
 
     private void deny(int y, int x) {
-        matrix[y][x].setCellState(CellState.NOT_ALLOWED);
+        if (y < height && x < width && y >= 0 && x >= 0)
+            matrix[y][x].setCellState(CellState.NOT_ALLOWED);
     }
 
     private void allow(int y, int x) {
@@ -382,7 +419,6 @@ class Lab {
         StringBuilder b = new StringBuilder();
 
         for (int i = 0; i < width; i++) {
-            joter:
             for (int j = 0; j < height; j++) {
                 if (matrix[j][i].getCellState() == CellState.NOT_ALLOWED) {
                     b.append(" X");
@@ -397,11 +433,11 @@ class Lab {
             b.append(" \n");
         }
 
-        for (int i = 0; i < players; i++) {
+        for (int i = 0; i < numberOfPlayers; i++) {
             int start, end;
             start = (height + 1)*2*coords[i][1] + coords[i][0]*2;
             end = start + 2;
-            switch (players - i - 1) {
+            switch (numberOfPlayers - i - 1) {
                 case 0 :
                     b.replace(start, end, "P"+i);
                     break;
@@ -414,4 +450,3 @@ class Lab {
     }
 }
 
-enum Directions {UP, DOWN, LEFT, RIGHT}
